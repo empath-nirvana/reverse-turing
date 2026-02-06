@@ -236,18 +236,6 @@ document.getElementById("btn-play").addEventListener("click", startGame);
 
 document.getElementById("btn-again").addEventListener("click", startGame);
 
-document.getElementById("btn-share").addEventListener("click", () => {
-  const text = "I took the Reverse Turing Test \u2014 can you convince an AI you're a machine?";
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text + " " + window.location.href);
-  }
-  const btn = document.getElementById("btn-share");
-  const original = btn.textContent;
-  btn.textContent = "Copied!";
-  setTimeout(() => {
-    btn.textContent = original;
-  }, 2000);
-});
 
 answerForm.addEventListener("submit", (e) => {
   e.preventDefault();
