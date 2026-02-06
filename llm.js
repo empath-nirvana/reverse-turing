@@ -1,31 +1,34 @@
 // LLM abstraction layer.
 //
-// Two roles — judge and respondent — can each use a different provider/model.
+// Two roles — judge and respondent — can each use a different provider/model/temperature.
 // Configure via env vars:
-//   JUDGE_PROVIDER   / JUDGE_MODEL    (defaults: openai / gpt-4o-mini)
-//   RESPONDENT_PROVIDER / RESPONDENT_MODEL (defaults: anthropic / claude-haiku-4-5-20251001)
+//   JUDGE_PROVIDER   / JUDGE_MODEL   / JUDGE_TEMPERATURE
+//   RESPONDENT_PROVIDER / RESPONDENT_MODEL / RESPONDENT_TEMPERATURE
 //
 // Supported providers: "mock", "openai", "anthropic"
 
 // --- Provider config ---
-// Each role reads its own pair of env vars, with sensible defaults.
+// `parseFloat` converts a string env var to a number. `||` provides the default
+// if the env var is unset or parses to NaN (which is falsy in JS).
 const config = {
   judge: {
     provider: process.env.JUDGE_PROVIDER || "openai",
     model: process.env.JUDGE_MODEL || "gpt-4o-mini",
+    temperature: parseFloat(process.env.JUDGE_TEMPERATURE) || 0.7,
   },
   respondent: {
     provider: process.env.RESPONDENT_PROVIDER || "openai",
     model: process.env.RESPONDENT_MODEL || "gpt-4o-mini",
+    temperature: parseFloat(process.env.RESPONDENT_TEMPERATURE) || 0.7,
   },
 };
 
 // --- Provider implementations ---
-// Each implements: chat(model, systemPrompt, messages) -> string
+// Each implements: chat(model, systemPrompt, messages, temperature) -> string
 
 const providers = {
   mock: {
-    async chat(_model, _systemPrompt, _messages) {
+    async chat(_model, _systemPrompt, _messages, _temperature) {
       return "This is a mock LLM response.";
     },
   },
@@ -35,12 +38,12 @@ const providers = {
     _getClient() {
       if (!this._client) {
         const OpenAI = require("openai");
-        this._client = new OpenAI(); // Reads OPENAI_API_KEY from env automatically
+        this._client = new OpenAI();
       }
       return this._client;
     },
 
-    async chat(model, systemPrompt, messages) {
+    async chat(model, systemPrompt, messages, temperature) {
       const client = this._getClient();
 
       const response = await client.chat.completions.create({
@@ -49,7 +52,7 @@ const providers = {
           { role: "system", content: systemPrompt },
           ...messages,
         ],
-        temperature: 0.7,
+        temperature,
       });
 
       return response.choices[0].message.content;
@@ -60,39 +63,33 @@ const providers = {
     _client: null,
     _getClient() {
       if (!this._client) {
-        // The Anthropic SDK uses `default` export, so we need `.default || module`
-        // to handle both CommonJS and ESM interop. This is a JS module system quirk.
         const Anthropic = require("@anthropic-ai/sdk");
-        this._client = new Anthropic(); // Reads ANTHROPIC_API_KEY from env automatically
+        this._client = new Anthropic();
       }
       return this._client;
     },
 
-    async chat(model, systemPrompt, messages) {
+    async chat(model, systemPrompt, messages, temperature) {
       const client = this._getClient();
 
-      // Anthropic's API is slightly different from OpenAI's:
-      // - `system` is a top-level parameter, not a message in the array
-      // - `max_tokens` is required (OpenAI defaults it)
       const response = await client.messages.create({
         model,
         system: systemPrompt,
         messages,
         max_tokens: 1024,
-        temperature: 0.7,
+        temperature: Math.min(temperature, 1.0), // Anthropic caps temperature at 1.0
       });
 
-      // Anthropic returns content as an array of blocks — we want the first text block.
       return response.content[0].text;
     },
   },
 };
 
 // --- Public API ---
-// `role` is "judge" or "respondent" — determines which provider/model to use.
+// `role` is "judge" or "respondent" — determines which provider/model/temperature to use.
 
 async function chat(role, systemPrompt, messages) {
-  const { provider, model } = config[role];
+  const { provider, model, temperature } = config[role];
   if (!provider) {
     throw new Error(`Unknown role: ${role}`);
   }
@@ -100,7 +97,7 @@ async function chat(role, systemPrompt, messages) {
   if (!impl) {
     throw new Error(`Unknown LLM provider: ${provider}`);
   }
-  return impl.chat(model, systemPrompt, messages);
+  return impl.chat(model, systemPrompt, messages, temperature);
 }
 
 module.exports = { chat };

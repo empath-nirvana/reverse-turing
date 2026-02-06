@@ -13,6 +13,31 @@ app.use(express.json());
 // Serve static files (index.html, style.css, app.js) from the public/ directory.
 app.use(express.static(path.join(__dirname, "public")));
 
+// --- Recent questions buffer ---
+// Stores the last N opening questions across all games so we can ask the judge
+// to avoid repeating them. Lives in memory — resets on server restart, which is fine.
+const RECENT_QUESTIONS_MAX = 5;
+const recentFirstQuestions = [];
+
+function recordFirstQuestion(question) {
+  recentFirstQuestions.push(question);
+  // If the buffer exceeds max, drop the oldest entry.
+  if (recentFirstQuestions.length > RECENT_QUESTIONS_MAX) {
+    // `shift()` removes and returns the first element — like pop_front or shift in Ruby.
+    recentFirstQuestions.shift();
+  }
+}
+
+// Build the opening message for the judge, including recent questions to avoid.
+function buildOpeningMessage() {
+  let msg = "Begin the interview. Ask your first question.";
+  if (recentFirstQuestions.length > 0) {
+    msg += "\n\nFor variety, try to avoid opening questions similar to these recent ones:\n";
+    msg += recentFirstQuestions.map((q) => `- "${q}"`).join("\n");
+  }
+  return msg;
+}
+
 // --- Helpers ---
 
 // Build the judge's conversation messages for an ongoing interview.
@@ -91,10 +116,11 @@ function formatTranscript(label, transcript) {
 app.post("/api/start", async (_req, res) => {
   try {
     const messages = [
-      { role: "user", content: "Begin the interview. Ask your first question." },
+      { role: "user", content: buildOpeningMessage() },
     ];
 
     const question = await chat("judge", interviewPrompt, messages);
+    recordFirstQuestion(question);
 
     res.json({ question, round: 1 });
   } catch (err) {
