@@ -4,7 +4,6 @@ A provocative experiment: can you convince an AI that you're a machine?
 
 In the classic Turing test, a machine tries to convince a human that it's human. Here, an AI judge interviews two respondents — you and another AI — both claiming to be artificial. The judge tries to figure out which one is the biological organism. Your goal is to pass as the machine.
 
-**[Try it live](https://reverse-turing.vercel.app)** (if it's still up)
 
 ## Run it locally
 
