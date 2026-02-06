@@ -98,7 +98,6 @@ app.post("/api/start", async (_req, res) => {
 
     res.json({ question, round: 1 });
   } catch (err) {
-    console.error("Error in /api/start:", err);
     res.status(500).json({ error: "Failed to start game. Check your LLM configuration." });
   }
 });
@@ -155,7 +154,7 @@ app.post("/api/answer", async (req, res) => {
         const cleaned = verdictRaw.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
         verdict = JSON.parse(cleaned);
       } catch (parseErr) {
-        console.error("Failed to parse verdict JSON:", verdictRaw);
+        // Verdict JSON failed to parse — fall back to a generic verdict.
         verdict = {
           humanIs: humanLabel,
           analysisA: verdictRaw,
@@ -187,7 +186,6 @@ app.post("/api/answer", async (req, res) => {
       });
     }
   } catch (err) {
-    console.error("Error in /api/answer:", err);
     res.status(500).json({ error: "Something went wrong. Try again." });
   }
 });
