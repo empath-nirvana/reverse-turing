@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 const { chat } = require("./llm");
-const { judgePrompt, respondentPrompt } = require("./prompts");
+const { interviewPrompt, verdictPrompt, respondentPrompt } = require("./prompts");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,43 +15,78 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // --- Helpers ---
 
-// Build the judge's conversation history from the game history array.
-// The judge sees its own questions as "assistant" messages, and the paired
-// A/B answers as "user" messages — this mirrors a back-and-forth conversation.
-function buildJudgeMessages(history) {
+// Build the judge's conversation messages for an ongoing interview.
+// `transcript` is an array of { question, answer } objects.
+function buildInterviewMessages(transcript) {
   const messages = [
-    { role: "user", content: "Begin the reverse Turing test. Ask your first question." },
+    { role: "user", content: "Begin the interview. Ask your first question." },
   ];
 
-  for (const round of history) {
-    // The judge's own question, recalled as an assistant turn.
+  for (const round of transcript) {
     messages.push({ role: "assistant", content: round.question });
-    // Both respondents' answers, shown to the judge as a user turn.
-    messages.push({
-      role: "user",
-      content: `Respondent A: ${round.answerA}\n\nRespondent B: ${round.answerB}`,
-    });
+    // Only add the answer turn if there is one (the last entry may be question-only).
+    if (round.answer !== undefined) {
+      messages.push({
+        role: "user",
+        content: `Respondent's answer: ${round.answer}\n\nAsk your next question.`,
+      });
+    }
   }
 
   return messages;
 }
 
+// Run a full 3-round interview between the judge and the AI respondent.
+// Returns an array of { question, answer } objects.
+async function runAiInterview() {
+  const transcript = [];
+  const messages = [
+    { role: "user", content: "Begin the interview. Ask your first question." },
+  ];
+
+  for (let i = 0; i < 3; i++) {
+    // Judge generates a question
+    const question = await chat("judge", interviewPrompt, messages);
+    messages.push({ role: "assistant", content: question });
+
+    // AI respondent answers it
+    const answer = await chat("respondent", respondentPrompt, [
+      { role: "user", content: question },
+    ]);
+
+    transcript.push({ question, answer });
+
+    // Feed the answer back to the judge (unless it's the last round)
+    if (i < 2) {
+      messages.push({
+        role: "user",
+        content: `Respondent's answer: ${answer}\n\nAsk your next question.`,
+      });
+    }
+  }
+
+  return transcript;
+}
+
+// Format a transcript for the verdict prompt.
+function formatTranscript(label, transcript) {
+  return transcript.map((round, i) =>
+    `Q${i + 1}: ${round.question}\n${label}: ${round.answer}`
+  ).join("\n\n");
+}
+
 // --- API Routes ---
 
-// Start a new game. The judge generates the first question.
+// Start a new game. The judge generates the first question for the human.
 app.post("/api/start", async (_req, res) => {
   try {
     const messages = [
-      { role: "user", content: "Begin the reverse Turing test. Ask your first question." },
+      { role: "user", content: "Begin the interview. Ask your first question." },
     ];
 
-    const question = await chat(judgePrompt, messages);
+    const question = await chat("judge", interviewPrompt, messages);
 
-    // Randomly assign the human to be "A" or "B" — the human never sees this,
-    // but the server needs it to know which slot the human's answers go in.
-    const humanSlot = Math.random() < 0.5 ? "A" : "B";
-
-    res.json({ question, humanSlot, round: 1 });
+    res.json({ question, round: 1 });
   } catch (err) {
     console.error("Error in /api/start:", err);
     res.status(500).json({ error: "Failed to start game. Check your LLM configuration." });
@@ -59,71 +94,84 @@ app.post("/api/start", async (_req, res) => {
 });
 
 // Submit an answer for the current round.
-// The client sends: { humanAnswer, humanSlot, round, history }
+// The client sends: { humanAnswer, round, history }
+// `history` is the human's interview so far: [{ question, answer }, ..., { question }]
 app.post("/api/answer", async (req, res) => {
   try {
-    const { humanAnswer, humanSlot, round, history } = req.body;
-    const aiSlot = humanSlot === "A" ? "B" : "A";
+    const { humanAnswer, round, history } = req.body;
 
-    // Get the current question from the last history entry (client sends it with just the question).
-    const currentQuestion = history[history.length - 1]?.question || "";
+    // Complete the current round by adding the human's answer.
+    const currentRound = history[history.length - 1];
+    currentRound.answer = humanAnswer;
 
-    // Ask the respondent LLM the same question the judge asked.
-    const respondentAnswer = await chat(respondentPrompt, [
-      { role: "user", content: currentQuestion },
-    ]);
-
-    // Slot the human and respondent answers into A/B based on the random assignment.
-    const roundResult = {
-      question: currentQuestion,
-      [`answer${humanSlot}`]: humanAnswer,
-      [`answer${aiSlot}`]: respondentAnswer,
-    };
-
-    // Replace the incomplete last entry (question-only) with the full round result.
-    // `slice(0, -1)` returns all elements except the last — like [0..-2] in Ruby.
-    const updatedHistory = [...history.slice(0, -1), roundResult];
+    // `history` is now the full human transcript up to this round.
+    const humanTranscript = history;
 
     if (round >= 3) {
-      // Final round — ask the judge for its verdict.
-      const judgeMessages = buildJudgeMessages(updatedHistory);
-      judgeMessages.push({
-        role: "user",
-        content: "All 3 rounds are complete. Deliver your verdict now as JSON.",
-      });
+      // --- Final round: run the AI interview, then get the verdict ---
 
-      const verdictRaw = await chat(judgePrompt, judgeMessages);
+      // Run a full 3-round interview with the AI respondent.
+      const aiTranscript = await runAiInterview();
 
-      // Parse the JSON verdict from the judge's response.
-      // The judge might wrap it in markdown code fences, so strip those first.
+      // Randomly assign "A" or "B" labels so the judge can't assume
+      // the first interview is always the human.
+      const humanIsA = Math.random() < 0.5;
+      const humanLabel = humanIsA ? "A" : "B";
+      const aiLabel = humanIsA ? "B" : "A";
+
+      const transcriptA = humanIsA ? humanTranscript : aiTranscript;
+      const transcriptB = humanIsA ? aiTranscript : humanTranscript;
+
+      // Ask the judge to compare both transcripts and deliver a verdict.
+      const verdictMessages = [
+        {
+          role: "user",
+          content: [
+            "Here are the transcripts from both interviews:\n",
+            `--- Respondent A ---\n${formatTranscript("A", transcriptA)}`,
+            `\n\n--- Respondent B ---\n${formatTranscript("B", transcriptB)}`,
+            "\n\nDeliver your verdict as JSON.",
+          ].join(""),
+        },
+      ];
+
+      const verdictRaw = await chat("judge", verdictPrompt, verdictMessages);
+
+      // Parse the JSON verdict. Strip markdown code fences if the model wraps it.
       let verdict;
       try {
         const cleaned = verdictRaw.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
         verdict = JSON.parse(cleaned);
       } catch (parseErr) {
         console.error("Failed to parse verdict JSON:", verdictRaw);
-        // Fallback: construct a verdict from the raw text.
         verdict = {
-          humanIs: humanSlot, // Default to "judge got it right" if we can't parse
-          reasoning: verdictRaw,
+          humanIs: humanLabel,
+          analysisA: verdictRaw,
+          analysisB: "",
+          summary: "",
         };
       }
 
-      res.json({ verdict, history: updatedHistory });
-    } else {
-      // Not the last round — ask the judge for the next question.
-      const judgeMessages = buildJudgeMessages(updatedHistory);
-      judgeMessages.push({
-        role: "user",
-        content: "Ask your next question.",
+      res.json({
+        verdict,
+        humanTranscript,
+        aiTranscript,
+        humanLabel,
       });
+    } else {
+      // --- Not the last round: ask the judge for the next question ---
 
-      const nextQuestion = await chat(judgePrompt, judgeMessages);
+      const judgeMessages = buildInterviewMessages(humanTranscript);
+      // The last answer was already added, so prompt for the next question.
+      // The buildInterviewMessages function already added "Ask your next question."
+      // after the last answer.
+
+      const nextQuestion = await chat("judge", interviewPrompt, judgeMessages);
 
       res.json({
         question: nextQuestion,
         round: round + 1,
-        history: updatedHistory,
+        history: humanTranscript,
       });
     }
   } catch (err) {
@@ -135,5 +183,6 @@ app.post("/api/answer", async (req, res) => {
 // `app.listen` starts the HTTP server — like `HttpServer::new(...).bind(...).run()` in Actix.
 app.listen(PORT, () => {
   console.log(`Reverse Turing Test running at http://localhost:${PORT}`);
-  console.log(`LLM provider: ${process.env.LLM_PROVIDER || "mock"}`);
+  console.log(`Judge: ${process.env.JUDGE_PROVIDER || "openai"} / ${process.env.JUDGE_MODEL || "gpt-4o-mini"}`);
+  console.log(`Respondent: ${process.env.RESPONDENT_PROVIDER || "openai"} / ${process.env.RESPONDENT_MODEL || "gpt-4o-mini"}`);
 });

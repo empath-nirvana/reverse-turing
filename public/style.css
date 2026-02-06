@@ -455,83 +455,78 @@ main {
   margin-bottom: 0.8rem;
 }
 
-/* Round-by-round breakdown */
+/* Interview transcript blocks */
 .verdict-rounds {
   margin-bottom: 2rem;
 }
 
-.round-block {
-  margin-bottom: 1rem;
+.interview-block {
+  margin-bottom: 1.5rem;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   overflow: hidden;
 }
 
-.round-header {
+.interview-header {
   font-size: 0.6rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  padding: 0.5rem 0.8rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.round-question {
-  padding: 0.8rem;
-  color: var(--accent);
-  background: var(--surface);
-  font-size: 0.8rem;
-  font-weight: 400;
-  line-height: 1.6;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.round-answers {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.round-answer {
-  padding: 0.8rem;
-  font-size: 0.78rem;
-  font-weight: 300;
-  line-height: 1.6;
-}
-
-.round-answer-label {
-  font-size: 0.55rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  margin-bottom: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.round-answer.you {
+/* Color the header differently for you vs AI */
+.interview-you .interview-header {
+  color: var(--human);
+  border-left: 2px solid var(--human-dim);
+}
+
+.interview-ai .interview-header {
+  color: var(--accent);
+  border-left: 2px solid var(--accent-dim);
+}
+
+.interview-round {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.interview-round:last-of-type {
+  border-bottom: none;
+}
+
+.interview-question {
+  padding: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.6;
+  background: var(--surface);
+}
+
+.interview-answer {
+  padding: 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--text-primary);
+}
+
+.interview-you .interview-answer {
   background: var(--human-bg);
-  color: var(--text-primary);
-  border-right: 1px solid var(--border-subtle);
 }
 
-.round-answer.you .round-answer-label {
-  color: var(--human-dim);
-}
-
-.round-answer.ai {
+.interview-ai .interview-answer {
   background: var(--accent-glow);
-  color: var(--text-primary);
 }
 
-.round-answer.ai .round-answer-label {
-  color: var(--accent-dim);
-}
-
-.round-commentary {
+.interview-analysis {
   padding: 0.8rem;
   background: var(--bg);
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-style: italic;
   font-weight: 300;
   line-height: 1.7;

@@ -1,67 +1,106 @@
 // LLM abstraction layer.
-// Swap providers by setting LLM_PROVIDER env var: "mock" or "openai".
-
-// process.env reads environment variables — like std::env::var in Rust or os.environ in Python.
-// The `||` here acts as a default value (falsy coalescing).
-const provider = process.env.LLM_PROVIDER || "mock";
-const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
-
-// Each provider implements the same interface:
-//   chat(systemPrompt, messages) -> string
 //
-// `messages` is an array of { role: "user"|"assistant", content: "..." } objects,
-// which is the standard chat format most LLM APIs expect.
+// Two roles — judge and respondent — can each use a different provider/model.
+// Configure via env vars:
+//   JUDGE_PROVIDER   / JUDGE_MODEL    (defaults: openai / gpt-4o-mini)
+//   RESPONDENT_PROVIDER / RESPONDENT_MODEL (defaults: anthropic / claude-haiku-4-5-20251001)
+//
+// Supported providers: "mock", "openai", "anthropic"
+
+// --- Provider config ---
+// Each role reads its own pair of env vars, with sensible defaults.
+const config = {
+  judge: {
+    provider: process.env.JUDGE_PROVIDER || "openai",
+    model: process.env.JUDGE_MODEL || "gpt-4o-mini",
+  },
+  respondent: {
+    provider: process.env.RESPONDENT_PROVIDER || "openai",
+    model: process.env.RESPONDENT_MODEL || "gpt-4o-mini",
+  },
+};
+
+// --- Provider implementations ---
+// Each implements: chat(model, systemPrompt, messages) -> string
 
 const providers = {
   mock: {
-    async chat(_systemPrompt, _messages) {
+    async chat(_model, _systemPrompt, _messages) {
       return "This is a mock LLM response.";
     },
   },
 
   openai: {
-    // Lazy-initialized client. We don't create it at module load time because
-    // the env var might not be set yet (e.g., in mock mode).
     _client: null,
     _getClient() {
       if (!this._client) {
-        // `require` inside a function is called "lazy require" — it defers loading
-        // the module until it's actually needed. Useful when you don't want to pay
-        // the import cost (or crash on missing deps) unless the code path is hit.
         const OpenAI = require("openai");
         this._client = new OpenAI(); // Reads OPENAI_API_KEY from env automatically
       }
       return this._client;
     },
 
-    async chat(systemPrompt, messages) {
+    async chat(model, systemPrompt, messages) {
       const client = this._getClient();
 
-      // The SDK mirrors the REST API: you pass a model name and a messages array.
-      // The system message sets the LLM's persona/instructions.
       const response = await client.chat.completions.create({
         model,
         messages: [
           { role: "system", content: systemPrompt },
-          // `...messages` spreads the array elements in — like *list in Python.
           ...messages,
         ],
         temperature: 0.7,
       });
 
-      // OpenAI returns an array of "choices" — we always just want the first one.
       return response.choices[0].message.content;
+    },
+  },
+
+  anthropic: {
+    _client: null,
+    _getClient() {
+      if (!this._client) {
+        // The Anthropic SDK uses `default` export, so we need `.default || module`
+        // to handle both CommonJS and ESM interop. This is a JS module system quirk.
+        const Anthropic = require("@anthropic-ai/sdk");
+        this._client = new Anthropic(); // Reads ANTHROPIC_API_KEY from env automatically
+      }
+      return this._client;
+    },
+
+    async chat(model, systemPrompt, messages) {
+      const client = this._getClient();
+
+      // Anthropic's API is slightly different from OpenAI's:
+      // - `system` is a top-level parameter, not a message in the array
+      // - `max_tokens` is required (OpenAI defaults it)
+      const response = await client.messages.create({
+        model,
+        system: systemPrompt,
+        messages,
+        max_tokens: 1024,
+        temperature: 0.7,
+      });
+
+      // Anthropic returns content as an array of blocks — we want the first text block.
+      return response.content[0].text;
     },
   },
 };
 
-// `async function` is like `async fn` in Rust — returns a Promise (similar to a Future).
-async function chat(systemPrompt, messages) {
+// --- Public API ---
+// `role` is "judge" or "respondent" — determines which provider/model to use.
+
+async function chat(role, systemPrompt, messages) {
+  const { provider, model } = config[role];
+  if (!provider) {
+    throw new Error(`Unknown role: ${role}`);
+  }
   const impl = providers[provider];
   if (!impl) {
     throw new Error(`Unknown LLM provider: ${provider}`);
   }
-  return impl.chat(systemPrompt, messages);
+  return impl.chat(model, systemPrompt, messages);
 }
 
 module.exports = { chat };
