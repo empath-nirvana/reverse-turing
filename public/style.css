@@ -1,0 +1,331 @@
+/* Reset & base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  background: #0a0a0a;
+  color: #e0e0e0;
+  min-height: 100vh;
+  /* dvh = dynamic viewport height — accounts for mobile browser chrome.
+     Falls back to vh for older browsers. */
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Screen management — only the .active screen is visible */
+.screen {
+  display: none;
+  width: 100%;
+  max-width: 600px;
+  padding: 2rem;
+}
+
+.screen.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Landing screen --- */
+.landing-content {
+  text-align: center;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #ffffff;
+}
+
+.tagline {
+  font-size: 1.1rem;
+  color: #888;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.explainer {
+  text-align: left;
+  color: #666;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+  border-left: 2px solid #222;
+  padding-left: 1rem;
+}
+
+.explainer p {
+  margin-bottom: 0.8rem;
+}
+
+.explainer p:last-child {
+  margin-bottom: 0;
+}
+
+/* Buttons */
+.btn-primary {
+  background: #ffffff;
+  color: #0a0a0a;
+  border: none;
+  padding: 0.8rem 2.5rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn-primary:hover {
+  opacity: 0.85;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #888;
+  border: 1px solid #333;
+  padding: 0.8rem 2.5rem;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.btn-secondary:hover {
+  border-color: #666;
+}
+
+/* --- Game screen --- */
+.game-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.progress {
+  font-size: 0.85rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.chat-area {
+  flex: 1;
+  min-height: 300px;
+  max-height: 60vh;
+  overflow-y: auto;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Chat bubbles */
+.msg {
+  padding: 0.8rem 1rem;
+  border-radius: 4px;
+  line-height: 1.5;
+  max-width: 85%;
+}
+
+.msg-judge {
+  background: #1a1a2e;
+  color: #a0a0d0;
+  /* align-self on a flex child pushes it to one side — like float but cleaner */
+  align-self: flex-start;
+}
+
+.msg-human {
+  background: #1a2e1a;
+  color: #a0d0a0;
+  align-self: flex-end;
+}
+
+/* Input area */
+.input-area {
+  display: flex;
+  gap: 0.5rem;
+}
+
+#answer-input {
+  flex: 1;
+  background: #141414;
+  border: 1px solid #333;
+  color: #e0e0e0;
+  padding: 0.8rem 1rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#answer-input:focus {
+  border-color: #555;
+}
+
+.btn-send {
+  background: #222;
+  color: #e0e0e0;
+  border: 1px solid #333;
+  padding: 0.8rem 1.2rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-send:hover {
+  background: #333;
+}
+
+/* Loading indicator — three dot animation */
+.loading-dots::after {
+  content: "";
+  /* CSS animation — `steps()` creates a discrete frame-by-frame animation
+     rather than a smooth transition. */
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0%   { content: ""; }
+  25%  { content: "."; }
+  50%  { content: ".."; }
+  75%  { content: "..."; }
+}
+
+/* --- Verdict screen --- */
+.verdict-content {
+  text-align: center;
+}
+
+.verdict-result {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.verdict-result.win {
+  color: #4caf50;
+}
+
+.verdict-result.lose {
+  color: #f44336;
+}
+
+/* Round-by-round breakdown */
+.verdict-rounds {
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
+.round-block {
+  margin-bottom: 1.5rem;
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.round-header {
+  font-size: 0.75rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.6rem 1rem;
+  background: #111;
+}
+
+.round-question {
+  padding: 0.8rem 1rem;
+  color: #a0a0d0;
+  background: #12121e;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.round-answers {
+  display: grid;
+  /* Two equal columns side by side */
+  grid-template-columns: 1fr 1fr;
+}
+
+.round-answer {
+  padding: 0.8rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.round-answer-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.4rem;
+}
+
+.round-answer.you {
+  background: #0f1a0f;
+  color: #a0d0a0;
+}
+
+.round-answer.you .round-answer-label {
+  color: #5a8a5a;
+}
+
+.round-answer.ai {
+  background: #0f0f1a;
+  color: #a0a0d0;
+}
+
+.round-answer.ai .round-answer-label {
+  color: #5a5a8a;
+}
+
+.round-commentary {
+  padding: 0.8rem 1rem;
+  background: #0a0a0a;
+  color: #887755;
+  font-size: 0.8rem;
+  font-style: italic;
+  line-height: 1.6;
+  border-top: 1px solid #1a1a1a;
+}
+
+/* Summary + provocation */
+.verdict-summary-section {
+  margin-bottom: 1.5rem;
+}
+
+.verdict-summary {
+  color: #aaa;
+  line-height: 1.7;
+  font-size: 0.95rem;
+  text-align: left;
+}
+
+.verdict-provocation {
+  border-top: 1px solid #222;
+  padding-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.provocation-text {
+  color: #888;
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.verdict-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Disabled state for form while waiting on API */
+.input-area.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}

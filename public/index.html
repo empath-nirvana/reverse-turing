@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reverse Turing Test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Landing screen -->
+  <div id="screen-landing" class="screen active">
+    <div class="landing-content">
+      <h1>Reverse Turing Test</h1>
+      <p class="tagline">An AI will ask you 3 questions.<br>Your job: convince it you're a machine.</p>
+      <div class="explainer">
+        <p>In the classic Turing test, a machine tries to convince a human that it's human. Here, we flip it. An AI judge interviews two respondents &mdash; you, and another AI &mdash; and tries to figure out which one is human. Your job is to convince the judge that you're the AI.</p>
+        <p>If you fail, a machine just decided you can't think like a machine. But what does that actually prove? And if you succeed &mdash; what does it mean that you can pass as one?</p>
+        <p>Either way, you might leave wondering what the test was really measuring.</p>
+      </div>
+      <button id="btn-play" class="btn-primary">Play</button>
+    </div>
+  </div>
+
+  <!-- Game screen -->
+  <div id="screen-game" class="screen">
+    <div class="game-header">
+      <span class="progress">Question <span id="round-num">1</span> of 3</span>
+    </div>
+    <div id="chat-area" class="chat-area">
+      <!-- Chat messages get appended here by app.js -->
+    </div>
+    <form id="answer-form" class="input-area">
+      <input
+        type="text"
+        id="answer-input"
+        placeholder="Type your response..."
+        autocomplete="off"
+        required
+      >
+      <button type="submit" class="btn-send">Send</button>
+    </form>
+  </div>
+
+  <!-- Verdict screen -->
+  <div id="screen-verdict" class="screen">
+    <div class="verdict-content">
+      <div id="verdict-result" class="verdict-result"></div>
+
+      <!-- Round-by-round breakdown with both answers + judge commentary -->
+      <div id="verdict-rounds" class="verdict-rounds"></div>
+
+      <div class="verdict-summary-section">
+        <p id="verdict-summary" class="verdict-summary"></p>
+      </div>
+
+      <div class="verdict-provocation">
+        <p id="verdict-question" class="provocation-text"></p>
+      </div>
+
+      <div class="verdict-actions">
+        <button id="btn-again" class="btn-primary">Try Again</button>
+        <button id="btn-share" class="btn-secondary">Share</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
