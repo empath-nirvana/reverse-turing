@@ -221,7 +221,7 @@ function showVerdict(verdict) {
     youDiv.className = "round-answer you";
     const youLabel = document.createElement("div");
     youLabel.className = "round-answer-label";
-    youLabel.textContent = "You";
+    youLabel.textContent = `You (Respondent ${state.humanSlot})`;
     const youText = document.createElement("div");
     youText.textContent = humanAnswer;
     youDiv.appendChild(youLabel);
@@ -232,7 +232,7 @@ function showVerdict(verdict) {
     aiDiv.className = "round-answer ai";
     const aiLabel = document.createElement("div");
     aiLabel.className = "round-answer-label";
-    aiLabel.textContent = "AI";
+    aiLabel.textContent = `AI (Respondent ${aiSlot})`;
     const aiText = document.createElement("div");
     aiText.textContent = aiAnswer;
     aiDiv.appendChild(aiLabel);
