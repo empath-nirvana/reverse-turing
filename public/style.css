@@ -100,62 +100,108 @@ main {
   text-align: left;
 }
 
-.landing-eyebrow {
-  font-size: 0.7rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--accent-dim);
-  margin-bottom: 1.5rem;
-}
-
-h1 {
-  font-family: var(--font-display);
-  font-size: clamp(2.8rem, 8vw, 4.5rem);
-  font-weight: 400;
-  line-height: 1.05;
-  color: #ffffff;
-  margin-bottom: 1.5rem;
-  /* Subtle text shadow for depth */
-  text-shadow: 0 0 80px rgba(196, 154, 64, 0.1);
-}
-
-.tagline {
-  font-size: 0.9rem;
-  font-weight: 300;
-  color: var(--text-secondary);
-  line-height: 1.7;
-  margin-bottom: 2.5rem;
-}
-
-.explainer {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 300;
-  line-height: 1.8;
-  margin-bottom: 3rem;
+/* --- Memo: sci-fi artifact / intercepted document ---
+   Meant to look like something you weren't supposed to see.
+   Faded, slightly degraded, monospaced. */
+.memo {
+  margin-bottom: 2rem;
   padding: 1.2rem;
   background: var(--surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   position: relative;
+  /* Slight transparency — like a faded printout */
+  opacity: 0.75;
 }
 
-.explainer-label {
+.memo-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.memo-classification {
   font-size: 0.6rem;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
   color: var(--accent-dim);
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.3rem;
 }
 
-.explainer p {
+.memo-dept {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.memo-meta {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.memo-body {
+  font-size: 0.75rem;
+  font-weight: 300;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+.memo-body p {
   margin-bottom: 0.7rem;
 }
 
-.explainer p:last-child {
+.memo-body p:last-child {
   margin-bottom: 0;
+}
+
+.memo-footer {
+  padding-top: 0.5rem;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+/* --- Instructions: addressed to the participant ---
+   Brighter, clearer, more prominent. This is what they need to read. */
+.instructions {
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  background: var(--surface-raised);
+  border: 1px solid var(--accent-dim);
+  border-radius: var(--radius);
+  /* `box-shadow` with the accent color gives a subtle warm glow
+     around the border, drawing the eye here */
+  box-shadow: 0 0 20px rgba(196, 154, 64, 0.06);
+}
+
+.instructions-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.instructions p {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.8;
+  margin-bottom: 0.8rem;
+}
+
+.instructions p:last-child {
+  margin-bottom: 0;
+}
+
+/* `strong` tags inside instructions get the accent color for emphasis */
+.instructions strong {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* --- Buttons --- */

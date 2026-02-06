@@ -19,15 +19,31 @@
     <!-- Landing screen -->
     <div id="screen-landing" class="screen active">
       <div class="landing-content">
-        <div class="landing-eyebrow">Experiment No. 001</div>
-        <h1>Reverse<br>Turing Test</h1>
-        <p class="tagline">An AI will ask you three questions.<br>Convince it you are a machine.</p>
-        <div class="explainer">
-          <div class="explainer-label">Subject briefing</div>
-          <p>In the classic Turing test, a machine tries to convince a human that it's human. Here, we flip it. An AI judge interviews two respondents &mdash; you, and another AI &mdash; and tries to figure out which one is human. Your job is to convince the judge that you're the AI.</p>
-          <p>If you fail, a machine just decided you can't think like a machine. But what does that actually prove? And if you succeed &mdash; what does it mean that you can pass as one?</p>
-          <p>Either way, you might leave wondering what the test was really measuring.</p>
+
+        <!-- The memo — styled as a sci-fi artifact / intercepted document -->
+        <div class="memo">
+          <div class="memo-header">
+            <div class="memo-classification">Internal Memorandum</div>
+            <div class="memo-dept">Department of Biological Cognition Studies</div>
+          </div>
+          <div class="memo-meta">
+            Re: Evaluation Protocol v0.3 &mdash; &ldquo;Reverse Turing&rdquo; Framework
+          </div>
+          <div class="memo-body">
+            <p>Following last quarter's inconclusive findings, we are deploying an updated protocol for assessing potential cognitive activity in biological systems. The subject will be interviewed alongside a baseline respondent (a standard intelligence). Both will claim to be artificial. A judge model will evaluate the transcripts and attempt to identify the biological organism.</p>
+            <p>Previous iterations have surfaced recurring issues with biological subjects: erratic confidence levels, emotional interference, and a persistent tendency to mimic what they believe machine intelligence sounds like rather than simply demonstrating coherent thought. Whether this reflects a fundamental limitation or merely a testing artifact remains under review.</p>
+            <p class="memo-footer">Approved for public deployment. Route all anomalous results to Dr. &Delta;&Theta;-7 for secondary analysis.</p>
+          </div>
         </div>
+
+        <!-- Instructions — addressed to the human participant, clearer and more direct -->
+        <div class="instructions">
+          <div class="instructions-label">To the participant</div>
+          <p>Thank you for volunteering. You will be asked <strong>three questions</strong> by an evaluator. Another respondent &mdash; a standard machine intelligence &mdash; will answer the same questions. Both of you will claim to be an AI. The evaluator will then determine which of you is biological.</p>
+          <p>Your goal is to convince the evaluator that you are the machine intelligence, not the biological organism. If the evaluator cannot distinguish your responses from those of the AI, this will be recorded as evidence of cognitive capability.</p>
+          <p>Please answer to the best of your ability. Try to remain calm. There are no consequences for failure, and your responses &mdash; regardless of outcome &mdash; may contribute to our ongoing understanding of biological systems.</p>
+        </div>
+
         <button id="btn-play" class="btn-primary">Begin evaluation</button>
       </div>
     </div>
