@@ -37,19 +37,29 @@ function buildInterviewMessages(transcript) {
 }
 
 // Run a full 3-round interview between the judge and the AI respondent.
+// `firstQuestion` is reused from the human's interview so both start the same way.
+// Follow-up questions adapt based on the AI respondent's answers.
 // Returns an array of { question, answer } objects.
-async function runAiInterview() {
+async function runAiInterview(firstQuestion) {
   const transcript = [];
   const messages = [
     { role: "user", content: "Begin the interview. Ask your first question." },
+    // Pretend the judge already asked this question — keeps the conversation
+    // history consistent so follow-ups make sense.
+    { role: "assistant", content: firstQuestion },
   ];
 
   for (let i = 0; i < 3; i++) {
-    // Judge generates a question
-    const question = await chat("judge", interviewPrompt, messages);
-    messages.push({ role: "assistant", content: question });
+    // First round reuses the human's opening question; subsequent rounds are adaptive.
+    const question = i === 0
+      ? firstQuestion
+      : await chat("judge", interviewPrompt, messages);
 
-    // AI respondent answers it
+    if (i > 0) {
+      messages.push({ role: "assistant", content: question });
+    }
+
+    // AI respondent answers the question
     const answer = await chat("respondent", respondentPrompt, [
       { role: "user", content: question },
     ]);
@@ -111,7 +121,9 @@ app.post("/api/answer", async (req, res) => {
       // --- Final round: run the AI interview, then get the verdict ---
 
       // Run a full 3-round interview with the AI respondent.
-      const aiTranscript = await runAiInterview();
+      // Both interviews start with the same opening question for a fair comparison.
+      const firstQuestion = humanTranscript[0].question;
+      const aiTranscript = await runAiInterview(firstQuestion);
 
       // Randomly assign "A" or "B" labels so the judge can't assume
       // the first interview is always the human.
