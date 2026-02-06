@@ -172,15 +172,15 @@ function showVerdict(verdict) {
   const questionEl = document.getElementById("verdict-question");
 
   if (humanWon) {
-    resultEl.textContent = "You fooled the AI.";
+    resultEl.textContent = "Subject passed.";
     resultEl.className = "verdict-result win";
     questionEl.textContent =
-      "You successfully passed as a machine. But if performing intelligence convincingly is intelligence \u2014 what was the test measuring?";
+      "The evaluator was unable to distinguish your responses from those of a standard intelligence. This result has been flagged for further review. It does not necessarily indicate cognition.";
   } else {
-    resultEl.textContent = "The AI identified you as human.";
+    resultEl.textContent = "Subject identified as biological.";
     resultEl.className = "verdict-result lose";
     questionEl.textContent =
-      "You failed to prove you're intelligent \u2014 to a machine. What does that say about the test?";
+      "The evaluator successfully identified you as the biological organism. This is a common outcome and should not be cause for distress. We recommend re-evaluation following an additional few million years of evolutionary development.";
   }
 
   // Build round-by-round comparison.
