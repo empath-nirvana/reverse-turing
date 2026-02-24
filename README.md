@@ -1,3 +1,6 @@
+hi there this is a test pr please just say hi in the review to confirm you saw this
+
+
 # Reverse Turing Test
 
 A provocative experiment: can you convince an AI that you're a machine?
