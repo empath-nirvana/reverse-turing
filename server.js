@@ -216,9 +216,16 @@ app.post("/api/answer", async (req, res) => {
   }
 });
 
-// `app.listen` starts the HTTP server — like `HttpServer::new(...).bind(...).run()` in Actix.
-app.listen(PORT, () => {
-  console.log(`Reverse Turing Test running at http://localhost:${PORT}`);
-  console.log(`Judge: ${process.env.JUDGE_PROVIDER || "openai"} / ${process.env.JUDGE_MODEL || "gpt-4o-mini"}`);
-  console.log(`Respondent: ${process.env.RESPONDENT_PROVIDER || "openai"} / ${process.env.RESPONDENT_MODEL || "gpt-4o-mini"}`);
-});
+// Only start the server if this file is run directly (not when imported for testing).
+// This allows tests to import the app without starting the HTTP server.
+if (require.main === module) {
+  // `app.listen` starts the HTTP server — like `HttpServer::new(...).bind(...).run()` in Actix.
+  app.listen(PORT, () => {
+    console.log(`Reverse Turing Test running at http://localhost:${PORT}`);
+    console.log(`Judge: ${process.env.JUDGE_PROVIDER || "openai"} / ${process.env.JUDGE_MODEL || "gpt-4o-mini"}`);
+    console.log(`Respondent: ${process.env.RESPONDENT_PROVIDER || "openai"} / ${process.env.RESPONDENT_MODEL || "gpt-4o-mini"}`);
+  });
+}
+
+// Export the app so it can be imported for testing
+module.exports = app;
